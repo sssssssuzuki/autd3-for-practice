@@ -3,7 +3,7 @@
 
 # autd3 練習用リポジトリ
 
-井上さんのオリジナルの実装(https://github.com/shinolab/autd)をもとに, 必要最低限の機能のみに限定したもの.
+井上さんのオリジナルの実装 (https://github.com/shinolab/autd) をもとに, 必要最低限の機能のみに限定したもの.
 
 Hardwareのversionはv0.3に対応.
 
