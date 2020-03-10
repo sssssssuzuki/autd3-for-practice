@@ -3,6 +3,7 @@
 //  autd3
 //
 //  Created by Seki Inoue on 6/1/16.
+//  Copyright © 2016 Hapis Lab. All rights reserved.
 //
 //
 

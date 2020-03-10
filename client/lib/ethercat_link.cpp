@@ -3,6 +3,7 @@
 //  autd3
 //
 //  Created by Seki Inoue on 6/1/16.
+//  Copyright © 2016 Hapis Lab. All rights reserved.
 //
 //
 
@@ -90,11 +91,10 @@ void autd::internal::EthercatLink::Send(size_t size, std::unique_ptr<uint8_t[]> 
 // for localhost connection
 #ifdef _WIN32
 
-typedef long(_stdcall *TcAdsPortOpenEx)(void);                    // NOLINT
-typedef long(_stdcall *TcAdsPortCloseEx)(long);                   // NOLINT
-typedef long(_stdcall *TcAdsGetLocalAddressEx)(long, AmsAddr *);  // NOLINT
-typedef long(_stdcall *TcAdsSyncWriteReqEx)(long, AmsAddr *, unsigned long, unsigned long, unsigned long,
-                                            void *);  // NOLINT
+typedef long(_stdcall *TcAdsPortOpenEx)(void);                                                                      // NOLINT
+typedef long(_stdcall *TcAdsPortCloseEx)(long);                                                                     // NOLINT
+typedef long(_stdcall *TcAdsGetLocalAddressEx)(long, AmsAddr *);                                                    // NOLINT
+typedef long(_stdcall *TcAdsSyncWriteReqEx)(long, AmsAddr *, unsigned long, unsigned long, unsigned long, void *);  // NOLINT
 
 #ifdef _WIN64
 
@@ -143,8 +143,7 @@ void autd::internal::LocalEthercatLink::Send(size_t size, std::unique_ptr<uint8_
   AmsAddr addr = {this->_netId, PORT};
 
   TcAdsSyncWriteReqEx write = (TcAdsSyncWriteReqEx)GetProcAddress(this->lib, TCADS_AdsSyncWriteReqEx);
-  long ret = write(this->_port,  // NOLINT
-                   &addr, INDEX_GROUP, INDEX_OFFSET_BASE, static_cast<unsigned long>(size), &buf[0]);
+  long ret = write(this->_port, &addr, INDEX_GROUP, INDEX_OFFSET_BASE, static_cast<unsigned long>(size), &buf[0]);  // NOLINT
 
   if (ret > 0) {
     // https://infosys.beckhoff.com/english.php?content=../content/1033/tcadscommon/html/tcadscommon_intro.htm&id=
@@ -157,9 +156,7 @@ void autd::internal::LocalEthercatLink::Send(size_t size, std::unique_ptr<uint8_
 #else
 
 void autd::internal::LocalEthercatLink::Open(std::string location) {
-  BOOST_ASSERT_MSG(false,
-                   "Link to localhost has not been compiled. Rebuild this "
-                   "library on a Twincat3 host machine with TcADS-DLL.");
+  throw std::runtime_error("Link to localhost has not been compiled. Rebuild this library on a Twincat3 host machine with TcADS-DLL.");
 }
 
 void autd::internal::LocalEthercatLink::Close() {}
