@@ -12,6 +12,7 @@
 #include <AdsLib.h>
 #include <stdio.h>
 
+#include <memory>
 #include <string>
 
 #include "link.hpp"
@@ -35,7 +36,7 @@ class EthercatLink : public Link {
   bool isOpen();
 
  protected:
-  long _port = 0;
+  long _port = 0;  // NOLINT
   AmsNetId _netId;
 };
 

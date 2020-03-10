@@ -40,7 +40,8 @@ class Device {
         if (!IS_MISSING_TRANSDUCER(x, y)) local_trans_positions.col(index++) = Eigen::Vector3f(x * TRANS_SIZE_MM, y * TRANS_SIZE_MM, 0);
 
     global_trans_positions = transform_matrix * local_trans_positions;
-  };
+  }
+
   int device_id;
   Eigen::Vector3f position;
   Eigen::Matrix<float, 3, NUM_TRANS_IN_UNIT> local_trans_positions;

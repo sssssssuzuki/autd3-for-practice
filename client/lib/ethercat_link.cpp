@@ -15,6 +15,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "privdef.hpp"
 
@@ -149,7 +150,7 @@ void autd::internal::LocalEthercatLink::Send(size_t size, std::unique_ptr<uint8_
     // https://infosys.beckhoff.com/english.php?content=../content/1033/tcadscommon/html/tcadscommon_intro.htm&id=
     // 6 : target port not found
     std::cerr << "Error on sending data (local): " << std::hex << ret << std::endl;
-    throw(int) ret;
+    throw static_cast<int>(ret);
   }
 }
 

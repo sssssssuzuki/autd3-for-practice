@@ -13,16 +13,13 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "autd3.hpp"
 
 namespace autd {
 namespace internal {
 class Link {
- protected:
-  virtual std::vector<uint16_t> &accessGainData(GainPtr &gain, const int deviceId);
-  virtual int &accessSent(ModulationPtr &mod);
-
  public:
   virtual void Open(std::string location) = 0;
   virtual void Close() = 0;
