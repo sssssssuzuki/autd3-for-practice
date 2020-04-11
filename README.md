@@ -5,7 +5,7 @@
 
 井上さんのオリジナルの実装 (https://github.com/shinolab/autd) をもとに, 必要最低限の機能のみに限定したもの.
 
-Hardwareのversionはv0.3に対応.
+Hardwareのversionはv0.4に対応.
 
 オリジナルからの変更点は以下の通り
 
@@ -13,5 +13,16 @@ Hardwareのversionはv0.3に対応.
 * SOEMのサポートを追加
 * GainはFocalPointGainのみに
 * ModulationはSineModulationのみに
-* v0.3に対応
+* v0.4に対応
 * cpplintに従って一部コードを修正
+
+## Build
+
+```
+git clone https://github.com/sssssssuzuki/autd3-for-practice.git --recursive
+cd client
+mkdir build
+cd build
+cmake ..
+make
+```

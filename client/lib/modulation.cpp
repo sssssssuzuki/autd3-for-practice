@@ -51,8 +51,3 @@ autd::ModulationPtr autd::SineModulation::Create(float freq, float amp, float of
   mod->loop = true;
   return mod;
 }
-
-inline float sinc(float x) {
-  if (fabs(x) < std::numeric_limits<float>::epsilon()) return 1;
-  return static_cast<float>(sin(M_PI * x) / (M_PI * x));
-}

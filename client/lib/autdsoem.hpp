@@ -3,7 +3,7 @@
 // Created Date: 24/08/2019
 // Author: Shun Suzuki
 // -----
-// Last Modified: 28/02/2020
+// Last Modified: 11/04/2020
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2019-2020 Hapis Lab. All rights reserved.
@@ -31,11 +31,8 @@ class ISOEMController {
 
   virtual void Open(const char *ifname, size_t dev_num, ECConfig config) = 0;
   virtual void Send(size_t size, std::unique_ptr<uint8_t[]> buf) = 0;
-  virtual void SetWaitForProcessMsg(bool is_wait) = 0;
-  virtual bool WaitForProcessMsg(uint8_t msg_id) = 0;
-  virtual std::vector<uint16_t> Read() = 0;
   virtual bool is_open() = 0;
-  virtual bool Close() = 0;
+  virtual void Close() = 0;
 };
 
 struct EtherCATAdapterInfo {

@@ -22,13 +22,9 @@ constexpr auto IS_MISSING_TRANSDUCER(T X, T Y) {
   return (Y == 1 && (X == 1 || X == 2 || X == 16));
 }
 
-constexpr auto FPGA_CLOCK = 25600000;
-
-constexpr auto ULTRASOUND_FREQUENCY = 40000;
 constexpr auto ULTRASOUND_WAVELENGTH = 8.5f;
 
 constexpr auto MOD_SAMPLING_FREQ = 4000;
-constexpr auto MOD_BUF_SIZE = 4000;
 constexpr auto MOD_FRAME_SIZE = 124;
 
 enum RxGlobalControlFlags {
@@ -41,7 +37,7 @@ enum RxGlobalControlFlags {
 struct RxGlobalHeader {
   uint8_t msg_id;
   uint8_t control_flags;
-  int8_t _frequency_shift;  // NO USE
+  int8_t command;
   uint8_t mod_size;
   uint8_t mod[MOD_FRAME_SIZE];
 };

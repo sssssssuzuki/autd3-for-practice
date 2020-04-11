@@ -143,8 +143,10 @@ void autd::Controller::impl::AppendGainSync(const autd::GainPtr gain) {
 }
 
 void autd::Controller::impl::AppendModulation(const autd::ModulationPtr mod) {
-  std::unique_lock<std::mutex> lk(_send_mtx);
-  _send_mod_q.push(mod);
+  {
+    std::unique_lock<std::mutex> lk(_send_mtx);
+    _send_mod_q.push(mod);
+  }
   _send_cond.notify_all();
 }
 
