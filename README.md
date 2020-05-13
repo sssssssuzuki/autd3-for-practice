@@ -22,10 +22,9 @@ Hardwareのversionはv0.4に対応.
 ## Build
 
 ```
-git clone https://github.com/sssssssuzuki/autd3-for-practice.git --recursive
-cd client
+git clone https://github.com/sssssssuzuki/autd3-for-practice.git --recursive -b windows
+cd autd3-for-practice/client
 mkdir build
 cd build
 cmake ..
-make
 ```

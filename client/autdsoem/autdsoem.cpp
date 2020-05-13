@@ -9,37 +9,8 @@
 // Copyright (c) 2019-2020 Hapis Lab. All rights reserved.
 //
 
-#if (_WIN32 || _WIN64)
-#ifndef WINDOWS
-#define WINDOWS
-#endif
-#elif defined __APPLE__
-#ifndef MACOSX
-#define MACOSX
-#endif
-#elif defined __linux__
-#ifndef LINUX
-#define LINUX
-#endif
-#else
-#error "Not supported."
-#endif
-
-#ifdef WINDOWS
 #define __STDC_LIMIT_MACROS
 #include <WinError.h>
-#else
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <time.h>
-#include <unistd.h>
-#endif
-
-#ifdef MACOSX
-#include <dispatch/dispatch.h>
-#endif
 
 #include <atomic>
 #include <chrono>
@@ -76,13 +47,7 @@ class SOEMController : public ISOEMController {
   bool _is_open = false;
 
  private:
-#ifdef WINDOWS
   static void CALLBACK RTthread(PVOID lpParam, BOOLEAN TimerOrWaitFired);
-#elif defined MACOSX
-  static void RTthread();
-#elif defined LINUX
-  static void RTthread(union sigval sv);
-#endif
 
   void CreateSendThread(size_t header_size, size_t body_size);
   void SetupSync0(bool actiavte, uint32_t cycle_time_ns);
@@ -99,15 +64,8 @@ class SOEMController : public ISOEMController {
   std::condition_variable _send_cond;
   std::mutex _send_mtx;
 
-#ifdef WINDOWS
   HANDLE _timerQueue = NULL;
   HANDLE _timer = NULL;
-#elif defined MACOSX
-  dispatch_queue_t _queue;
-  dispatch_source_t _timer;
-#elif defined LINUX
-  timer_t _timer_id;
-#endif
 };
 
 bool SOEMController::is_open() { return _is_open; }
@@ -120,13 +78,7 @@ void SOEMController::Send(size_t size, std::unique_ptr<uint8_t[]> buf) {
   _send_cond.notify_all();
 }
 
-#ifdef WINDOWS
 void CALLBACK SOEMController::RTthread(PVOID lpParam, BOOLEAN TimerOrWaitFired)
-#elif defined MACOSX
-void SOEMController::RTthread()
-#elif defined LINUX
-void SOEMController::RTthread(union sigval sv)
-#endif
 {
   bool expected = false;
   if (AUTD3_LIB_RTTHREAD_LOCK.compare_exchange_weak(expected, true)) {
@@ -198,7 +150,6 @@ void SOEMController::Open(const char *ifname, size_t dev_num, ECConfig config) {
 
   SetupSync0(true, _sync0_cyctime);
 
-#ifdef WINDOWS
   _timerQueue = CreateTimerQueue();
   if (_timerQueue == NULL) {
     std::cerr << "CreateTimerQueue failed." << std::endl;
@@ -214,49 +165,7 @@ void SOEMController::Open(const char *ifname, size_t dev_num, ECConfig config) {
   if (!SetPriorityClass(hProcess, REALTIME_PRIORITY_CLASS)) {
     std::cerr << "Failed to SetPriorityClass" << std::endl;
   }
-
-#elif defined MACOSX
-  _queue = dispatch_queue_create("timerQueue", 0);
-
-  _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _queue);
-  dispatch_source_set_event_handler(_timer, ^{
-    RTthread();
-  });
-
-  dispatch_source_set_cancel_handler(_timer, ^{
-    dispatch_release(_timer);
-    dispatch_release(_queue);
-  });
-
-  dispatch_time_t start = dispatch_time(DISPATCH_TIME_NOW, 0);
-  dispatch_source_set_timer(_timer, start, config.ec_sm3_cyctime_ns, 0);
-  dispatch_resume(_timer);
-#elif defined LINUX
-  struct itimerspec itval;
-  struct sigevent se;
-
-  itval.it_value.tv_sec = 0;
-  itval.it_value.tv_nsec = config.ec_sm3_cyctime_ns;
-  itval.it_interval.tv_sec = 0;
-  itval.it_interval.tv_nsec = config.ec_sm3_cyctime_ns;
-
-  memset(&se, 0, sizeof(se));
-  se.sigev_value.sival_ptr = NULL;
-  se.sigev_notify = SIGEV_THREAD;
-  se.sigev_notify_function = RTthread;
-  se.sigev_notify_attributes = NULL;
-
-  if (timer_create(CLOCK_REALTIME, &se, &_timer_id) < 0) {
-    std::cerr << "Error: timer_create." << std::endl;
-    return;
-  }
-
-  if (timer_settime(_timer_id, 0, &itval, NULL) < 0) {
-    std::cerr << "Error: timer_settime." << std::endl;
-    return;
-  }
-#endif
-
+  
   _is_open = true;
   CreateSendThread(config.header_size, config.body_size);
 }
@@ -272,20 +181,14 @@ void SOEMController::Close() {
     }
 
     memset(_io_map, 0x00, _output_frame_size);
-    for (int i; i < 200; i++) {
+    for (int i = 0; i < 200; i++) {
       ec_send_processdata();
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-#ifdef WINDOWS
     if (!DeleteTimerQueueTimer(_timerQueue, _timer, 0)) {
       if (GetLastError() != ERROR_IO_PENDING) std::cerr << "DeleteTimerQueue failed." << std::endl;
     }
-#elif defined MACOSX
-    dispatch_source_cancel(_timer);
-#elif defined LINUX
-    timer_delete(_timer_id);
-#endif
 
     SetupSync0(false, _sync0_cyctime);
 
