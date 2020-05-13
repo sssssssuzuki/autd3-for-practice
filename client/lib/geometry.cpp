@@ -7,12 +7,8 @@
 //
 //
 
-#include <codeanalysis\warnings.h>
 #include <stdio.h>
-#pragma warning(push)
-#pragma warning(disable : ALL_CODE_ANALYSIS_WARNINGS 26812)
 #include <Eigen/Geometry>
-#pragma warning(pop)
 
 #include <map>
 

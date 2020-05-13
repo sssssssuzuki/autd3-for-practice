@@ -9,12 +9,7 @@
 
 #pragma once
 
-#include <codeanalysis\warnings.h>
-#pragma warning(push)
-#pragma warning(disable : ALL_CODE_ANALYSIS_WARNINGS 26812)
 #include <Eigen/Core>
-#pragma warning(pop)
-
 #include <iostream>
 #include <map>
 #include <memory>
