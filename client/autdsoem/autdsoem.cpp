@@ -3,13 +3,15 @@
 // Created Date: 23/08/2019
 // Author: Shun Suzuki
 // -----
-// Last Modified: 11/04/2020
+// Last Modified: 13/05/2020
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2019-2020 Hapis Lab. All rights reserved.
 //
 
 #define __STDC_LIMIT_MACROS
+#include "../lib/autdsoem.hpp"
+
 #include <WinError.h>
 
 #include <atomic>
@@ -24,7 +26,6 @@
 #include <thread>
 #include <vector>
 
-#include "../lib/autdsoem.hpp"
 #include "./ethercat.h"
 
 namespace autdsoem {
@@ -78,8 +79,7 @@ void SOEMController::Send(size_t size, std::unique_ptr<uint8_t[]> buf) {
   _send_cond.notify_all();
 }
 
-void CALLBACK SOEMController::RTthread(PVOID lpParam, BOOLEAN TimerOrWaitFired)
-{
+void CALLBACK SOEMController::RTthread(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
   bool expected = false;
   if (AUTD3_LIB_RTTHREAD_LOCK.compare_exchange_weak(expected, true)) {
     auto pre = AUTD3_LIB_SEND_COND.load(std::memory_order_acquire);
@@ -165,7 +165,7 @@ void SOEMController::Open(const char *ifname, size_t dev_num, ECConfig config) {
   if (!SetPriorityClass(hProcess, REALTIME_PRIORITY_CLASS)) {
     std::cerr << "Failed to SetPriorityClass" << std::endl;
   }
-  
+
   _is_open = true;
   CreateSendThread(config.header_size, config.body_size);
 }
