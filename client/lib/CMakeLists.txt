@@ -49,7 +49,6 @@ include_directories(${INCLUDE_LIST})
 if(WIN32)
   source_group("link" FILES
     link.cpp
-    ethercat_link.cpp
     soem_link.cpp
   )
 

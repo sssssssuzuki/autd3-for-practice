@@ -23,9 +23,6 @@ ADD_CUSTOM_TARGET(cpplint
   ${PROJECT_SOURCE_DIR}/autdsoem/*
   )
 
-# ADS
-add_subdirectory(deps/BeckhoffADS)
-
 #SOEM
 add_subdirectory(autdsoem)
 

@@ -7,22 +7,21 @@
 //
 //
 
-#include <stdio.h>
-
-#include <map>
-#if WIN32
 #include <codeanalysis\warnings.h>
+#include <stdio.h>
 #pragma warning(push)
 #pragma warning(disable : ALL_CODE_ANALYSIS_WARNINGS 26812)
-#endif
 #include <Eigen/Geometry>
-#if WIN32
 #pragma warning(pop)
-#endif
+
+#include <map>
+
 #include "autd3.hpp"
 #include "privdef.hpp"
 
-class Device {
+namespace autd {
+
+class Geometry::Device {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Device(int device_id, Eigen::Vector3f position, Eigen::Vector3f euler_angles)
@@ -51,51 +50,40 @@ class Device {
   Eigen::Affine3f transform_matrix;
 };
 
-class autd::Geometry::impl {
- public:
-  std::vector<std::shared_ptr<Device> > devices;
-  std::shared_ptr<Device> device(int transducer_id) {
-    int eid = transducer_id / NUM_TRANS_IN_UNIT;
-    return this->devices[eid];
-  }
-};
+std::shared_ptr<Geometry::Device> Geometry::device(int transducer_id) {
+  int eid = transducer_id / NUM_TRANS_IN_UNIT;
+  return this->_devices[eid];
+}
 
-autd::GeometryPtr autd::Geometry::Create() { return GeometryPtr(new Geometry); }
+Geometry::Geometry() {}
 
-autd::Geometry::Geometry() { this->_pimpl = std::unique_ptr<impl>(new impl()); }
+Geometry::~Geometry() {}
 
-autd::Geometry::~Geometry() {}
+GeometryPtr Geometry::Create() { return GeometryPtr(new Geometry); }
 
-int autd::Geometry::AddDevice(Eigen::Vector3f position, Eigen::Vector3f euler_angles) {
-  int device_id = static_cast<int>(this->_pimpl->devices.size());
-  this->_pimpl->devices.push_back(std::shared_ptr<Device>(new Device(device_id, position, euler_angles)));
+int Geometry::AddDevice(Eigen::Vector3f position, Eigen::Vector3f euler_angles) {
+  int device_id = static_cast<int>(this->_devices.size());
+  this->_devices.push_back(std::shared_ptr<Device>(new Device(device_id, position, euler_angles)));
   return device_id;
 }
 
-void autd::Geometry::DelDevice(int device_id) {
-  auto itr = this->_pimpl->devices.begin();
-  while (itr != this->_pimpl->devices.end()) {
-    if ((*itr)->device_id == device_id)
-      itr = this->_pimpl->devices.erase(itr);
-    else
-      itr++;
-  }
-}
+const int Geometry::numDevices() { return static_cast<int>(this->_devices.size()); }
 
-const int autd::Geometry::numDevices() { return static_cast<int>(this->_pimpl->devices.size()); }
+const int Geometry::numTransducers() { return static_cast<int>(this->numDevices() * NUM_TRANS_IN_UNIT); }
 
-const int autd::Geometry::numTransducers() { return static_cast<int>(this->numDevices() * NUM_TRANS_IN_UNIT); }
-
-const Eigen::Vector3f autd::Geometry::position(int transducer_id) {
+const Eigen::Vector3f Geometry::position(int transducer_id) {
   const int local_trans_id = transducer_id % NUM_TRANS_IN_UNIT;
-  auto device = this->_pimpl->device(transducer_id);
+  auto device = this->device(transducer_id);
   return device->global_trans_positions.col(local_trans_id);
 }
 
-const Eigen::Vector3f &autd::Geometry::direction(int transducer_id) {
-  return this->_pimpl->devices[this->deviceIdForTransIdx(transducer_id)]->z_direction;
+const Eigen::Vector3f Geometry::direction(int transducer_id) {
+  auto device = this->device(transducer_id);
+  return device->z_direction;
 }
 
-const int autd::Geometry::deviceIdForDeviceIdx(int device_idx) { return this->_pimpl->devices[device_idx]->device_id; }
+const int Geometry::deviceIdForDeviceIdx(int device_idx) { return this->_devices[device_idx]->device_id; }
 
-const int autd::Geometry::deviceIdForTransIdx(int transducer_id) { return this->_pimpl->device(transducer_id)->device_id; }
+const int autd::Geometry::deviceIdForTransIdx(int transducer_id) { return this->device(transducer_id)->device_id; }
+
+}  // namespace autd
