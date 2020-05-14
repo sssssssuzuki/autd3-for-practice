@@ -13,6 +13,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <algorithm>
+
 #include "autd3.hpp"
 #include "privdef.hpp"
 
@@ -36,13 +38,13 @@ ModulationPtr Modulation::Create(uint8_t amp) {
 ModulationPtr SineModulation::Create(float freq, float amp, float offset) {
   ModulationPtr mod = ModulationPtr(new SineModulation());
 
-  freq = std::min<float>(mod->samplingFrequency() / 2, std::max<float>(1.0, freq));
+  freq = std::clamp(freq, 1.0f, mod->samplingFrequency() / 2.0f);
 
   int T = static_cast<int>(1.0 / freq * mod->samplingFrequency());
   mod->buffer.resize(T, 0);
   for (int i = 0; i < T; i++) {
-    float tamp = 255.0f * offset + 127.5f * amp * static_cast<float>(cos(2.0 * M_PI * i / T));
-    mod->buffer[i] = static_cast<uint8_t>(floor(fmin(fmaxf(tamp, 0.0f), 255.0f)));
+    double tamp = 255.0 * offset + 127.5 * amp * cos(2.0 * M_PI * i / T);
+    mod->buffer[i] = static_cast<uint8_t>(round(std::clamp(tamp, 0.0, 255.0)));
     if (mod->buffer[i] == 0) mod->buffer[i] = 1;
   }
   return mod;

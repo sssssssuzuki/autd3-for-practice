@@ -20,7 +20,7 @@ namespace autd {
 
 Gain::Gain() {
   this->_built = false;
-  this->_geometry = GeometryPtr(nullptr);
+  this->_geometry = nullptr;
 }
 
 bool Gain::built() { return this->_built; }
@@ -30,13 +30,13 @@ void Gain::SetGeometry(const GeometryPtr &geometry) { this->_geometry = geometry
 GeometryPtr Gain::geometry() { return this->_geometry; }
 
 GainPtr NullGain::Create() {
-  std::shared_ptr<NullGain> ptr = std::shared_ptr<NullGain>(new NullGain());
-  ptr->_geometry = GeometryPtr(nullptr);
+  auto ptr = std::make_shared<NullGain>();
+  ptr->_geometry = nullptr;
   return ptr;
 }
 
 void NullGain::build() {
-  if (this->built()) return;
+  if (this->_built) return;
   assert(this->geometry() != nullptr);
 
   for (int i = 0; i < this->geometry()->numDevices(); i++) {
@@ -47,9 +47,9 @@ void NullGain::build() {
 }
 
 GainPtr FocalPointGain::Create(Eigen::Vector3f point) {
-  std::shared_ptr<FocalPointGain> ptr = std::shared_ptr<FocalPointGain>(new FocalPointGain());
+  auto ptr = std::make_shared<FocalPointGain>();
   ptr->_point = point;
-  ptr->_geometry = GeometryPtr(nullptr);
+  ptr->_geometry = nullptr;
   return ptr;
 }
 
@@ -65,8 +65,8 @@ void FocalPointGain::build() {
     Eigen::Vector3f trp = this->geometry()->position(i);
     float dist = (trp - this->_point).norm();
     float fphase = fmodf(dist, ULTRASOUND_WAVELENGTH) / ULTRASOUND_WAVELENGTH;
-    uint8_t amp = 0xff;
     uint8_t phase = static_cast<uint8_t>(round(255.0f * (1.0f - fphase)));
+    uint8_t amp = 0xff;
     int dev_idx = this->geometry()->deviceIdForTransIdx(i);
     this->_data[dev_idx][i % NUM_TRANS_IN_UNIT] = ((uint16_t)amp << 8) + phase;
   }

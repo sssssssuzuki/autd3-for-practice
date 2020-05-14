@@ -26,13 +26,19 @@ using EtherCATAdapters = std::vector<EtherCATAdapter>;
 
 class SOEMLink : public Link {
  public:
-  static LinkPtr Open(std::string location, int device_num);
-  void Close();
-  void Send(size_t size, std::unique_ptr<uint8_t[]> buf);
-  bool isOpen();
+  SOEMLink();
+  ~SOEMLink();
+  static LinkPtr Create(std::string ifname, int device_num);
+
+  void Open() final;
+  void Close() final;
+  void Send(size_t size, std::unique_ptr<uint8_t[]> buf) final;
+  bool isOpen() final;
   static EtherCATAdapters SOEMLink::EnumerateAdapters(int *const size);
 
- protected:
+ private:
+  std::string _ifname;
+  int _device_num;
   std::unique_ptr<autdsoem::ISOEMController> _cnt;
   bool _is_open = false;
 };

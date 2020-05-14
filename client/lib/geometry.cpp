@@ -28,7 +28,7 @@ class Geometry::Device {
                              Eigen::AngleAxisf(euler_angles.z(), Eigen::Vector3f::UnitZ());
 
     Eigen::Affine3f transform_matrix = Eigen::Translation3f(position) * quo;
-    z_direction = quo * Eigen::Vector3f(0, 0, 1);
+    _z_direction = quo * Eigen::Vector3f(0, 0, 1);
 
     Eigen::Matrix<float, 3, NUM_TRANS_IN_UNIT> local_trans_positions;
     int index = 0;
@@ -36,11 +36,11 @@ class Geometry::Device {
       for (int x = 0; x < NUM_TRANS_X; x++)
         if (!IS_MISSING_TRANSDUCER(x, y)) local_trans_positions.col(index++) = Eigen::Vector3f(x * TRANS_SIZE_MM, y * TRANS_SIZE_MM, 0);
 
-    global_trans_positions = transform_matrix * local_trans_positions;
+    _global_trans_positions = transform_matrix * local_trans_positions;
   }
 
-  Eigen::Matrix<float, 3, NUM_TRANS_IN_UNIT> global_trans_positions;
-  Eigen::Vector3f z_direction;
+  Eigen::Matrix<float, 3, NUM_TRANS_IN_UNIT> _global_trans_positions;
+  Eigen::Vector3f _z_direction;
 };
 
 std::shared_ptr<Geometry::Device> Geometry::device(int transducer_id) {
@@ -65,12 +65,12 @@ const int Geometry::numTransducers() { return static_cast<int>(this->numDevices(
 const Eigen::Vector3f Geometry::position(int transducer_id) {
   auto device = this->device(transducer_id);
   const int local_trans_id = transducer_id % NUM_TRANS_IN_UNIT;
-  return device->global_trans_positions.col(local_trans_id);
+  return device->_global_trans_positions.col(local_trans_id);
 }
 
 const Eigen::Vector3f Geometry::direction(int transducer_id) {
   auto device = this->device(transducer_id);
-  return device->z_direction;
+  return device->_z_direction;
 }
 
 const int autd::Geometry::deviceIdForTransIdx(int transducer_id) { return transducer_id / NUM_TRANS_IN_UNIT; }

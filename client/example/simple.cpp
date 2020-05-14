@@ -38,8 +38,8 @@ int main() {
   autd.geometry()->AddDevice(Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(0, 0, 0));
 
   auto ifname = GetAdapterName();
-  auto link = autd::SOEMLink::Open(ifname, 1);
-  autd.SetLink(link);
+  auto link = autd::SOEMLink::Create(ifname, 1);
+  autd.OpenWith(link);
   if (!autd.isOpen()) return ENXIO;
 
   auto g = autd::FocalPointGain::Create(Eigen::Vector3f(90, 70, 150));

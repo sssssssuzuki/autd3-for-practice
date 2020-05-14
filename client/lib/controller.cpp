@@ -27,10 +27,11 @@ Controller::Controller() { this->_geometry = GeometryPtr(new Geometry()); }
 
 Controller::~Controller() { this->Close(); }
 
-void Controller::SetLink(LinkPtr link) {
+void Controller::OpenWith(LinkPtr link) {
   this->Close();
 
   this->_link = link;
+  this->_link->Open();
   if (this->_link->isOpen())
     this->InitPipeline();
   else
@@ -167,7 +168,7 @@ void Controller::FlushBuffer() {
 }
 
 std::unique_ptr<uint8_t[]> Controller::MakeBody(GainPtr gain, ModulationPtr mod, size_t *size) {
-  auto num_devices = (gain != nullptr) ? gain->geometry()->numDevices() : 0;
+  const int num_devices = (gain != nullptr) ? gain->geometry()->numDevices() : 0;
 
   *size = sizeof(RxGlobalHeader) + sizeof(uint16_t) * NUM_TRANS_IN_UNIT * num_devices;
   auto body = std::make_unique<uint8_t[]>(*size);
@@ -191,12 +192,12 @@ std::unique_ptr<uint8_t[]> Controller::MakeBody(GainPtr gain, ModulationPtr mod,
     mod->sent += mod_size;
   }
 
-  auto *cursor = &body[0] + sizeof(RxGlobalHeader) / sizeof(body[0]);
   if (gain != nullptr) {
+    auto *cursor = &body[0] + sizeof(RxGlobalHeader);
+    auto byteSize = NUM_TRANS_IN_UNIT * sizeof(uint16_t);
     for (int i = 0; i < gain->geometry()->numDevices(); i++) {
-      auto byteSize = NUM_TRANS_IN_UNIT * sizeof(uint16_t);
       std::memcpy(cursor, &gain->_data[i].at(0), byteSize);
-      cursor += byteSize / sizeof(body[0]);
+      cursor += byteSize;
     }
   }
   return body;

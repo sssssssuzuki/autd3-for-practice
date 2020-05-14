@@ -12,16 +12,28 @@
 #include "soem_link.hpp"
 
 #include <memory>
+#include <string>
 
 #include "autdsoem.hpp"
 #include "ec_config.hpp"
 #include "privdef.hpp"
 
 namespace autd {
-LinkPtr SOEMLink::Open(std::string ifname, int device_num) {
-  auto link = std::make_shared<SOEMLink>();
 
-  link->_cnt = autdsoem::ISOEMController::Create();
+LinkPtr SOEMLink::Create(std::string ifname, int device_num) {
+  auto link = std::make_shared<SOEMLink>();
+  link->_ifname = ifname;
+  link->_device_num = device_num;
+
+  return link;
+}
+
+SOEMLink::SOEMLink() { _device_num = 0; }
+
+SOEMLink::~SOEMLink() { this->Close(); }
+
+void SOEMLink::Open() {
+  _cnt = autdsoem::ISOEMController::Create();
 
   autdsoem::ECConfig config{0, 0, 0, 0, 0};
   config.ec_sm3_cyctime_ns = EC_SM3_CYCLE_TIME_NANO_SEC;
@@ -30,16 +42,14 @@ LinkPtr SOEMLink::Open(std::string ifname, int device_num) {
   config.body_size = NUM_TRANS_IN_UNIT * 2;
   config.input_frame_size = EC_INPUT_FRAME_SIZE;
 
-  link->_cnt->Open(ifname.c_str(), device_num, config);
-  link->_is_open = link->_cnt->is_open();
-
-  return link;
+  _cnt->Open(_ifname.c_str(), _device_num, config);
+  _is_open = _cnt->is_open();
 }
 
 void SOEMLink::Close() {
   if (_is_open) {
-    _cnt->Close();
     _is_open = false;
+    _cnt->Close();
   }
 }
 

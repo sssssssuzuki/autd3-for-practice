@@ -57,6 +57,7 @@ class Geometry {
 
 class Link {
  public:
+  virtual void Open() = 0;
   virtual void Close() = 0;
   virtual void Send(size_t size, std::unique_ptr<uint8_t[]> buf) = 0;
   virtual bool isOpen() = 0;
@@ -119,7 +120,7 @@ class Controller {
  public:
   Controller();
   ~Controller();
-  void SetLink(LinkPtr link);
+  void OpenWith(LinkPtr link);
   bool isOpen();
   void Close();
   GeometryPtr geometry();
