@@ -6,14 +6,6 @@ set (CMAKE_CXX_STANDARD 17)
 
 set(EIGEN_PATH ../deps/Eigen3)
 
-if(WIN32)
-	set(OS win32)
-elseif(APPLE)
-	set(OS macosx)
-else()
-	set(OS linux)
-endif()
-
 if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()

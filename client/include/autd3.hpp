@@ -1,11 +1,13 @@
-/*
- *  autd3.hpp
- *  autd3
- *
- *  Created by Seki Inoue on 5/13/16.
- *  Copyright © 2016 Hapis Lab. All rights reserved.
- *
- */
+// File: autd3.hpp
+// Project: include
+// Created Date: 21/03/2018
+// Author: Shun Suzuki
+// -----
+// Last Modified: 14/05/2020
+// Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
+// -----
+// Copyright (c) 2020 Hapis Lab. All rights reserved.
+//
 
 #pragma once
 
@@ -21,23 +23,17 @@
 #include <vector>
 
 namespace autd {
-namespace internal {
 class Link;
-}
 class Controller;
 class Gain;
 class Geometry;
 class Modulation;
 
 using GainPtr = std::shared_ptr<Gain>;
+using LinkPtr = std::shared_ptr<Link>;
 using GeometryPtr = std::shared_ptr<Geometry>;
 using ModulationPtr = std::shared_ptr<Modulation>;
-
-using EtherCATAdapter = std::pair<std::string, std::string>;
-using EtherCATAdapters = std::vector<EtherCATAdapter>;
 using ControllerPtr = std::shared_ptr<Controller>;
-
-enum class LinkType { SOEM };
 
 class Geometry {
   friend class Controller;
@@ -46,13 +42,12 @@ class Geometry {
   Geometry();
   ~Geometry();
   static GeometryPtr Create();
-  int AddDevice(Eigen::Vector3f position, Eigen::Vector3f euler_angles);
+  void AddDevice(Eigen::Vector3f position, Eigen::Vector3f euler_angles);
   const int numDevices();
   const int numTransducers();
   const Eigen::Vector3f position(int transducer_idx);
   const Eigen::Vector3f direction(int transducer_id);
   const int deviceIdForTransIdx(int device_index);
-  const int deviceIdForDeviceIdx(int device_index);
 
  private:
   class Device;
@@ -60,27 +55,35 @@ class Geometry {
   std::shared_ptr<Device> device(int transducer_id);
 };
 
+class Link {
+ public:
+  virtual void Close() = 0;
+  virtual void Send(size_t size, std::unique_ptr<uint8_t[]> buf) = 0;
+  virtual bool isOpen() = 0;
+};
+
 class Gain {
   friend class Controller;
   friend class Geometry;
-  friend class internal::Link;
 
  protected:
   Gain();
-  std::mutex _mtx;
   bool _built;
   GeometryPtr _geometry;
   std::map<int, std::vector<uint16_t>> _data;
 
  public:
-  static GainPtr Create();
-  virtual void build();
+  virtual void build() = 0;
   void SetGeometry(const GeometryPtr &geometry);
   GeometryPtr geometry();
   bool built();
 };
 
-typedef Gain NullGain;
+class NullGain : public Gain {
+ public:
+  static GainPtr Create();
+  void build();
+};
 
 class FocalPointGain : public Gain {
  public:
@@ -93,13 +96,11 @@ class FocalPointGain : public Gain {
 
 class Modulation {
   friend class Controller;
-  friend class internal::Link;
 
  public:
   static ModulationPtr Create();
   static ModulationPtr Create(uint8_t amp);
   const float samplingFrequency();
-  bool loop;
   std::vector<uint8_t> buffer;
 
  protected:
@@ -118,7 +119,7 @@ class Controller {
  public:
   Controller();
   ~Controller();
-  void Open(LinkType type, std::string location = "");
+  void SetLink(LinkPtr link);
   bool isOpen();
   void Close();
   GeometryPtr geometry();
@@ -131,11 +132,9 @@ class Controller {
   void AppendModulation(const ModulationPtr modulation);
   void AppendModulationSync(const ModulationPtr modulation);
 
-  static EtherCATAdapters EnumerateAdapters(int *const size);
-
  private:
   GeometryPtr _geometry;
-  std::shared_ptr<internal::Link> _link;
+  LinkPtr _link;
   std::queue<GainPtr> _build_q;
   std::queue<GainPtr> _send_gain_q;
   std::queue<ModulationPtr> _send_mod_q;

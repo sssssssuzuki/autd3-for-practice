@@ -1,59 +1,65 @@
-//
-//  gain.cpp
-//  autd3
-//
-//  Created by Seki Inoue on 6/1/16.
-//  Copyright © 2016 Hapis Lab. All rights reserved.
-//
+// File: gain.cpp
+// Project: lib
+// Created Date: 21/03/2018
+// Author: Shun Suzuki
+// -----
+// Last Modified: 14/05/2020
+// Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
+// -----
+// Copyright (c) 2020 Hapis Lab. All rights reserved.
 //
 
 #include <cassert>
-#include <iostream>
 #include <map>
-#include <string>
 #include <vector>
 
 #include "autd3.hpp"
 #include "privdef.hpp"
 
-autd::GainPtr autd::Gain::Create() { return GainPtr(new Gain()); }
+namespace autd {
 
-autd::Gain::Gain() {
+Gain::Gain() {
   this->_built = false;
   this->_geometry = GeometryPtr(nullptr);
 }
 
-void autd::Gain::build() {
+bool Gain::built() { return this->_built; }
+
+void Gain::SetGeometry(const GeometryPtr &geometry) { this->_geometry = geometry; }
+
+GeometryPtr Gain::geometry() { return this->_geometry; }
+
+GainPtr NullGain::Create() {
+  std::shared_ptr<NullGain> ptr = std::shared_ptr<NullGain>(new NullGain());
+  ptr->_geometry = GeometryPtr(nullptr);
+  return ptr;
+}
+
+void NullGain::build() {
   if (this->built()) return;
   assert(this->geometry() != nullptr);
 
   for (int i = 0; i < this->geometry()->numDevices(); i++) {
-    this->_data[this->geometry()->deviceIdForDeviceIdx(i)] = std::vector<uint16_t>(NUM_TRANS_IN_UNIT, 0x0000);
+    this->_data[i] = std::vector<uint16_t>(NUM_TRANS_IN_UNIT, 0x0000);
   }
+
+  this->_built = true;
 }
 
-bool autd::Gain::built() { return this->_built; }
-
-void autd::Gain::SetGeometry(const autd::GeometryPtr &geometry) { this->_geometry = geometry; }
-
-autd::GeometryPtr autd::Gain::geometry() { return this->_geometry; }
-
-autd::GainPtr autd::FocalPointGain::Create(Eigen::Vector3f point) {
+GainPtr FocalPointGain::Create(Eigen::Vector3f point) {
   std::shared_ptr<FocalPointGain> ptr = std::shared_ptr<FocalPointGain>(new FocalPointGain());
   ptr->_point = point;
   ptr->_geometry = GeometryPtr(nullptr);
   return ptr;
 }
 
-void autd::FocalPointGain::build() {
+void FocalPointGain::build() {
   if (this->built()) return;
   assert(this->geometry() != nullptr);
 
-  this->_data.clear();
   const int ndevice = this->geometry()->numDevices();
-  for (int i = 0; i < ndevice; i++) {
-    this->_data[this->geometry()->deviceIdForDeviceIdx(i)].resize(NUM_TRANS_IN_UNIT);
-  }
+  for (int i = 0; i < ndevice; i++) this->_data[i].resize(NUM_TRANS_IN_UNIT);
+
   const int ntrans = this->geometry()->numTransducers();
   for (int i = 0; i < ntrans; i++) {
     Eigen::Vector3f trp = this->geometry()->position(i);
@@ -61,8 +67,10 @@ void autd::FocalPointGain::build() {
     float fphase = fmodf(dist, ULTRASOUND_WAVELENGTH) / ULTRASOUND_WAVELENGTH;
     uint8_t amp = 0xff;
     uint8_t phase = static_cast<uint8_t>(round(255.0f * (1.0f - fphase)));
-    this->_data[this->geometry()->deviceIdForTransIdx(i)][i % NUM_TRANS_IN_UNIT] = ((uint16_t)amp << 8) + phase;
+    int dev_idx = this->geometry()->deviceIdForTransIdx(i);
+    this->_data[dev_idx][i % NUM_TRANS_IN_UNIT] = ((uint16_t)amp << 8) + phase;
   }
 
   this->_built = true;
 }
+}  // namespace autd

@@ -4,33 +4,23 @@ set(SOEM_PATH ../deps/SOEM)
 
 set (CMAKE_CXX_STANDARD 17)
 
-if(WIN32)
-	set(OS win32)
-elseif(APPLE)
-	set(OS macosx)
-else()
-	set(OS linux)
-endif()
-
 include_directories(
 	../include
 
 	${SOEM_PATH}/soem
 	${SOEM_PATH}/osal
-	${SOEM_PATH}/osal/${OS}
-	${SOEM_PATH}/oshw/${OS}
+	${SOEM_PATH}/osal/win32
+	${SOEM_PATH}/oshw/win32
 )
 
-if(WIN32)
-	include_directories(
-		${SOEM_PATH}/oshw/${OS}/wpcap/Include
-		${SOEM_PATH}/oshw/${OS}/wpcap/Include/pcap
-	)
-endif()
+include_directories(
+	${SOEM_PATH}/oshw/win32/wpcap/Include
+	${SOEM_PATH}/oshw/win32/wpcap/Include/pcap
+)
 
 add_library(autdsoem STATIC
 	autdsoem.cpp
-	../lib/autdsoem.hpp
+	../include/autdsoem.hpp
 
 	${SOEM_PATH}/soem/ethercatbase.c
 	${SOEM_PATH}/soem/ethercatcoe.c
@@ -42,9 +32,9 @@ add_library(autdsoem STATIC
 	${SOEM_PATH}/soem/ethercatprint.c
 	${SOEM_PATH}/soem/ethercatsoe.c
 	
-	${SOEM_PATH}/osal/${OS}/osal.c
-	${SOEM_PATH}/oshw/${OS}/nicdrv.c
-	${SOEM_PATH}/oshw/${OS}/oshw.c
+	${SOEM_PATH}/osal/win32/osal.c
+	${SOEM_PATH}/oshw/win32/nicdrv.c
+	${SOEM_PATH}/oshw/win32/oshw.c
 )
 
 source_group("soem" FILES
@@ -58,21 +48,15 @@ source_group("soem" FILES
 	${SOEM_PATH}/soem/ethercatprint.c
 	${SOEM_PATH}/soem/ethercatsoe.c
 	
-	${SOEM_PATH}/osal/${OS}/osal.c
-	${SOEM_PATH}/oshw/${OS}/nicdrv.c
-	${SOEM_PATH}/oshw/${OS}/oshw.c
+	${SOEM_PATH}/osal/win32/osal.c
+	${SOEM_PATH}/oshw/win32/nicdrv.c
+	${SOEM_PATH}/oshw/win32/oshw.c
 )
 
-if(WIN32)
-	add_custom_command(TARGET autdsoem
-					POST_BUILD
-					COMMAND lib /OUT:$(OUTDIR)temp.lib $(TARGETPATH) $(SolutionDir)..\\deps\\SOEM\\oshw\\win32\\wpcap\\Lib\\x64\\*.lib /ignore:4006
-					COMMAND del $(TARGETPATH)
-					COMMAND rename $(OUTDIR)temp.lib $(TargetFileName)
-	)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd26451 /wd6385  /wd6386 /wd6011 /wd26495 /wd4996 /wd6001 /wd4200")
-endif()
-
-if(NOT WIN32)
-  set_target_properties(autdsoem PROPERTIES POSITION_INDEPENDENT_CODE ON)
-endif()
+add_custom_command(TARGET autdsoem
+				POST_BUILD
+				COMMAND lib /OUT:$(OUTDIR)temp.lib $(TARGETPATH) $(SolutionDir)..\\deps\\SOEM\\oshw\\win32\\wpcap\\Lib\\x64\\*.lib /ignore:4006
+				COMMAND del $(TARGETPATH)
+				COMMAND rename $(OUTDIR)temp.lib $(TargetFileName)
+)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd26451 /wd6385  /wd6386 /wd6011 /wd26495 /wd4996 /wd6001 /wd4200")

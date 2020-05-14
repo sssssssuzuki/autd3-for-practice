@@ -3,7 +3,7 @@
 // Created Date: 24/08/2019
 // Author: Shun Suzuki
 // -----
-// Last Modified: 27/02/2020
+// Last Modified: 14/05/2020
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2019-2020 Hapis Lab. All rights reserved.
@@ -12,12 +12,13 @@
 #include <iostream>
 
 #include "autd3.hpp"
+#include "soem_link.hpp"
 
 using namespace std;
 
 string GetAdapterName() {
   int size;
-  auto adapters = autd::Controller::EnumerateAdapters(&size);
+  auto adapters = autd::SOEMLink::EnumerateAdapters(&size);
   for (auto i = 0; i < size; i++) {
     auto adapter = adapters[i];
     cout << "[" << i << "]: " << adapter.first << ", " << adapter.second << endl;
@@ -37,11 +38,11 @@ int main() {
   autd.geometry()->AddDevice(Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(0, 0, 0));
 
   auto ifname = GetAdapterName();
-  autd.Open(autd::LinkType::SOEM, ifname);
+  auto link = autd::SOEMLink::Open(ifname, 1);
+  autd.SetLink(link);
   if (!autd.isOpen()) return ENXIO;
 
   auto g = autd::FocalPointGain::Create(Eigen::Vector3f(90, 70, 150));
-
   autd.AppendGainSync(g);
   autd.AppendModulationSync(autd::SineModulation::Create(150));  // 150Hz AM
 

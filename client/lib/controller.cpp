@@ -1,17 +1,17 @@
-/*
- *  autd3.cpp
- *  autd3
- *
- *  Created by Seki Inoue on 5/13/16.
- *  Copyright © 2016 Hapis Lab. All rights reserved.
- *
- */
+// File: controller.cpp
+// Project: lib
+// Created Date: 21/03/2018
+// Author: Shun Suzuki
+// -----
+// Last Modified: 14/05/2020
+// Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
+// -----
+// Copyright (c) 2020 Hapis Lab. All rights reserved.
+//
 
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <condition_variable>
-#include <iostream>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -19,9 +19,7 @@
 #include <vector>
 
 #include "autd3.hpp"
-#include "autdsoem.hpp"
 #include "privdef.hpp"
-#include "soem_link.hpp"
 
 namespace autd {
 
@@ -29,21 +27,10 @@ Controller::Controller() { this->_geometry = GeometryPtr(new Geometry()); }
 
 Controller::~Controller() { this->Close(); }
 
-void Controller::Open(LinkType type, std::string location) {
+void Controller::SetLink(LinkPtr link) {
   this->Close();
 
-  switch (type) {
-    case LinkType::SOEM: {
-      this->_link = std::make_shared<internal::SOEMLink>();
-      auto device_num = this->_geometry->numDevices();
-      this->_link->Open(location + ":" + std::to_string(device_num));
-      break;
-    }
-    default:
-      assert("This link type is not implemented yet.");
-      break;
-  }
-
+  this->_link = link;
   if (this->_link->isOpen())
     this->InitPipeline();
   else
@@ -193,7 +180,8 @@ std::unique_ptr<uint8_t[]> Controller::MakeBody(GainPtr gain, ModulationPtr mod,
   if (this->_silent_mode) header->control_flags |= SILENT;
 
   if (mod != nullptr) {
-    const uint8_t mod_size = std::max(0, std::min(static_cast<int>(mod->buffer.size() - mod->sent), MOD_FRAME_SIZE));
+    const int remainning_size = static_cast<int>(mod->buffer.size() - mod->sent);
+    const uint8_t mod_size = std::clamp(remainning_size, 0, MOD_FRAME_SIZE);
     header->mod_size = mod_size;
     auto sent = static_cast<size_t>(mod->sent);
     if (sent == 0) header->control_flags |= LOOP_BEGIN;
@@ -206,26 +194,11 @@ std::unique_ptr<uint8_t[]> Controller::MakeBody(GainPtr gain, ModulationPtr mod,
   auto *cursor = &body[0] + sizeof(RxGlobalHeader) / sizeof(body[0]);
   if (gain != nullptr) {
     for (int i = 0; i < gain->geometry()->numDevices(); i++) {
-      auto deviceId = gain->geometry()->deviceIdForDeviceIdx(i);
       auto byteSize = NUM_TRANS_IN_UNIT * sizeof(uint16_t);
-      std::memcpy(cursor, &gain->_data[deviceId].at(0), byteSize);
+      std::memcpy(cursor, &gain->_data[i].at(0), byteSize);
       cursor += byteSize / sizeof(body[0]);
     }
   }
   return body;
 }
-
-EtherCATAdapters Controller::EnumerateAdapters(int *const size) {
-  auto adapters = autdsoem::EtherCATAdapterInfo::EnumerateAdapters();
-  *size = static_cast<int>(adapters.size());
-  EtherCATAdapters res;
-  for (auto adapter : autdsoem::EtherCATAdapterInfo::EnumerateAdapters()) {
-    EtherCATAdapter p;
-    p.first = adapter.desc;
-    p.second = adapter.name;
-    res.push_back(p);
-  }
-  return res;
-}
-
 };  // namespace autd

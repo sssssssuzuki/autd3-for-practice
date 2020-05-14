@@ -1,17 +1,17 @@
-//
-//  privdef.hpp
-//  autd3
-//
-//  Created by Seki Inoue on 6/7/16.
-//  Copyright © 2016 Hapis Lab. All rights reserved.
-//
+// File: privdef.hpp
+// Project: lib
+// Created Date: 21/03/2018
+// Author: Shun Suzuki
+// -----
+// Last Modified: 14/05/2020
+// Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
+// -----
+// Copyright (c) 2020 Hapis Lab. All rights reserved.
 //
 
 #pragma once
 
 #include <stdint.h>
-
-#include <array>
 
 constexpr auto NUM_TRANS_IN_UNIT = 249;
 constexpr auto NUM_TRANS_X = 18;
