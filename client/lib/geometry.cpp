@@ -3,7 +3,7 @@
 // Created Date: 09/03/2020
 // Author: Shun Suzuki
 // -----
-// Last Modified: 14/05/2020
+// Last Modified: 15/05/2020
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -34,8 +34,9 @@ class Geometry::Device {
     int index = 0;
     for (int y = 0; y < NUM_TRANS_Y; y++)
       for (int x = 0; x < NUM_TRANS_X; x++)
-        if (!IS_MISSING_TRANSDUCER(x, y)) local_trans_positions.col(index++) = Eigen::Vector3f(x * TRANS_SIZE_MM, y * TRANS_SIZE_MM, 0);
-
+        if (!IS_MISSING_TRANSDUCER(x, y)) {
+          local_trans_positions.col(index++) = Eigen::Vector3f(x * TRANS_SIZE_MM, y * TRANS_SIZE_MM, 0);
+        }
     _global_trans_positions = transform_matrix * local_trans_positions;
   }
 
