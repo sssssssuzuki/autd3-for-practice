@@ -3,7 +3,7 @@
 // Created Date: 21/03/2018
 // Author: Shun Suzuki
 // -----
-// Last Modified: 14/05/2020
+// Last Modified: 17/05/2020
 // Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 // -----
 // Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -108,7 +108,7 @@ void Controller::InitPipeline() {
   srand(0);
   this->_build_thr = std::thread([&] {
     while (this->isOpen()) {
-      GainPtr gain;
+      GainPtr gain = nullptr;
       {
         std::unique_lock<std::mutex> lk(_build_mtx);
         _build_cond.wait(lk, [&] { return _build_q.size() || !this->isOpen(); });
@@ -118,21 +118,23 @@ void Controller::InitPipeline() {
         }
       }
 
-      if (gain != nullptr && !gain->built()) gain->build();
-
+      if (gain != nullptr && !gain->built()) {
+        gain->SetGeometry(_geometry);
+        gain->build();
+      }
       {
         std::unique_lock<std::mutex> lk(_send_mtx);
         _send_gain_q.push(gain);
-        _send_cond.notify_all();
       }
+      _send_cond.notify_all();
     }
   });
 
   this->_send_thr = std::thread([&] {
     try {
       while (this->isOpen()) {
-        GainPtr gain;
-        ModulationPtr mod;
+        GainPtr gain = nullptr;
+        ModulationPtr mod = nullptr;
 
         {
           std::unique_lock<std::mutex> lk(_send_mtx);
